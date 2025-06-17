@@ -62,18 +62,68 @@ docker exec -it kafka kafka-topics \
 ```
 
 # Send Messages (Producer)
+### Without Key
 ```bash
 docker exec -it kafka kafka-console-producer \
   --topic my-topic \
   --bootstrap-server localhost:9092
 ```
+### With Key
+```bash
+docker exec -it kafka kafka-console-producer \
+  --topic my-topic \
+  --bootstrap-server localhost:9092 \
+  --property "parse.key=true" \
+  --property "key.separator=:"
+```
 
 # Read Messages
+### Without Key
 ```bash
 docker exec -it kafka kafka-console-consumer \
   --topic my-topic \
   --from-beginning \
   --bootstrap-server localhost:9092
+```
+### With Key
+```bash
+docker exec -it kafka kafka-console-consumer \
+  --topic my-topic \
+  --bootstrap-server localhost:9092 \
+  --from-beginning \
+  --property print.key=true \
+  --property key.separator=":"
+```
+### With GroupID
+```bash
+docker exec -it kafka kafka-console-consumer \
+  --topic my-topic \
+  --bootstrap-server localhost:9092 \
+  --group my-consumer-group \
+  --from-beginning
+```
+
+# Delete Topic
+```bash
+docker exec -it kafka kafka-topics \
+  --delete \
+  --topic my-topic \
+  --bootstrap-server localhost:9092
+```
+
+# View Consumer Groups
+```bash
+docker exec -it kafka kafka-consumer-groups \
+  --bootstrap-server localhost:9092 \
+  --list
+```
+
+# Descirbe a Group
+```bash
+docker exec -it kafka kafka-consumer-groups \
+  --bootstrap-server localhost:9092 \
+  --describe \
+  --group <your-consumer-group-id>
 ```
 
 # Tips
@@ -83,3 +133,4 @@ docker exec -it kafka kafka-console-consumer \
     ```bash
     docker exec -it kafka kafka-topics --help
     ```
+- Kafka's default partitioning behavior changed starting with Kafka 2.4 — for the Java producer client. The behavior changed from pure round-robin to a smarter strategy called "sticky partitioning", but it's conditional.
