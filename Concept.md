@@ -1,3 +1,49 @@
+# Key concepts:
+## Partitions
+Think of a topic as a folder and partitions as separate files inside it.
+Kafka decides which partition a message goes to using:
+- A key (if provided)
+- Otherwise: sticky/round-robin strategy
+
+## Consumer Group
+A consumer group is a set of consumers that share the work of consuming from a topic.
+- Kafka assigns each partition to only one consumer in a group.
+- But different groups can consume the same topic independently.
+
+<b>Kafka guarantees: each partition is read by only one consumer in a group at a time.</b>
+
+## Partition-to-Consumer Mapping Rules
+| #Partitions | #Consumers in Group | Behavior                                               |
+| ----------- | ------------------- | ------------------------------------------------------ |
+| 3           | 1                   | One consumer reads from all partitions                 |
+| 3           | 2                   | One gets 2 partitions, one gets 1                      |
+| 3           | 3                   | One-to-one mapping                                     |
+| 3           | 4                   | One partition per consumer; extra consumer is **idle** |
+
+# 🧠Example Scenario
+## Topic: user-logins (4 partitions)
+👥 Consumer Group: analytics-group
+| Partition | Assigned Consumer |
+| --------- | ----------------- |
+| 0         | consumer-1        |
+| 1         | consumer-2        |
+| 2         | consumer-3        |
+| 3         | consumer-4        |
+
+If consumer-2 crashes:
+- Kafka reassigns partition 1 to one of the remaining consumers.
+- Messages are not lost — offsets ensure safe resumption.
+
+🔄 How Kafka Distributes Messages to Partitions
+When a producer sends a message, Kafka decides which partition it should go to using the following logic:
+| Key Provided? | Kafka Version | Partitioning Method         |
+| ------------- | ------------- | --------------------------- |
+| ✅ Yes         | Any           | Hash(key) % num\_partitions |
+| ❌ No          | ≤ 2.3         | Round-robin                 |
+| ❌ No          | ≥ 2.4         | Sticky partitioning         |
+
+## Definitions:
+
 | **Term**                   | **Explanation**                                                                             |
 |---------------------------|---------------------------------------------------------------------------------------------|
 | **Topic**                  | A named stream where messages are sent by producers and read by consumers.                 |
